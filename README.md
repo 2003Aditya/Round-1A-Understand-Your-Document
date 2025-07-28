@@ -147,6 +147,5 @@ PyMuPDF==1.23.7
 ## 📬 Contact
 
 Made with 💡 for **Adobe India Hackathon – Round 1A**
-**GitHub**: https://github.com/your-username
-**Email**: you@example.com
+**GitHub**: https://github.com/2003Aditya
 
