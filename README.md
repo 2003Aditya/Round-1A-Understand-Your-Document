@@ -1,84 +1,152 @@
-# 📄 PDF Outline Extractor — Round 1A Hackathon Submission
-
----
+# 📄 PDF Outline Extractor – Adobe India Hackathon Round 1A Submission
 
 ## 🧠 Problem Statement
 
-Extract a **structured outline** from a PDF:
-- Document `title`
-- Headings classified into `H1`, `H2`, `H3`
-- Include the `page number` of each heading
+Extract a structured outline from a PDF:
+- Detect and tag hierarchical headings (H1–H4)
+- Extract the document title
+- Output a JSON with heading text and page number
 
-This solution runs **offline**, meets the performance and architecture constraints (amd64, ≤10s, ≤200MB), and outputs a JSON per PDF file.
+This solution runs **offline**, meets **amd64** architecture constraints, completes in **≤10 seconds**, and stays under **200MB**.
+
+---
+
+## 🔍 Methodology
+
+We use `PyMuPDF` to analyze the visual and structural layout of each page:
+- **Font Size & Style Detection**: Larger, bold fonts are prioritized for higher-level headings.
+- **Regex Patterns**: Identifies common heading formats like `1`, `1.1`, `2.1.1`, etc.
+- **Heuristics**: Flags capitalized phrases and common keywords like “Appendix”, “Timeline”, etc.
+- **Flat Output**: Each heading is flattened but tagged by level (`H1` to `H4`) and accurately mapped to the PDF page number.
+
+---
+
+## 🧾 Output Format
+
+```json
+{
+  "title": "RFP: Request for Proposal To Present a Proposal for Developing the Business Plan for the Ontario Digital Library",
+  "outline": [
+    { "level": "H1", "text": "Ontario’s Digital Library", "page": 2 },
+    { "level": "H2", "text": "Summary", "page": 2 },
+    { "level": "H3", "text": "Timeline:", "page": 2 },
+    { "level": "H4", "text": "1) A preliminary report will be issued during June 2003.", "page": 7 }
+  ]
+}
+```
+
+### ✅ The output is:
+- Flat (not nested), but sorted by appearance
+- Level-tagged (`H1` to `H4`)
+- Page-accurate
+- Clean, compact, and hackathon-ready
 
 ---
 
 ## 🧱 Project Structure
 
-```bash
+```
 .
-├── Dockerfile                   # Multi-stage optimized Dockerfile
-├── go/
-│   └── cmd/
-│       └── main.go              # Go binary to trigger Python logic
+├── Dockerfile                 # Multi-stage optimized container (amd64)
 ├── extractor/
-│   ├── extract.py               # PDF heading extractor
-│   └── requirement.txt          # Python dependencies (PyMuPDF)
-├── input/                       # Put your PDFs here (used by Docker/local)
-├── output/                      # JSON output will be placed here
-└── README.md                    # You're reading it
+│   ├── extract.py             # Main script for PDF heading extraction
+│   └── requirements.txt       # Python dependencies (PyMuPDF)
+├── input/                     # Input PDF files
+├── output/                    # Output JSON files
+└── README.md                  # This documentation
+```
 
-🧾 PDF Outline Extractor
-A simple tool to extract structured outlines (headings like H1, H2, H3) from PDF files and export them as JSON.
+---
 
-🧪 Option 1: Run Locally (with Python Virtual Environment)
-✅ Step 1: Clone the repository
+## 🚀 How to Use
+
+### 🧪 Run Locally
+
+```bash
+# Clone project
 git clone https://github.com/your-username/pdf-outline-extractor.git
 cd pdf-outline-extractor
-✅ Step 2: Create virtual environment
+
+# Setup Python environment
 cd extractor
 python3 -m venv venv
-✅ Step 3: Activate the environment
-On Linux/macOS:
+source venv/bin/activate       # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
 
-source venv/bin/activate
-On Windows:
-
-venv\Scripts\activate
-✅ Step 4: Install Python dependencies
-pip install -r requirement.txt
-✅ Step 5: Add a PDF file to input directory
+# Add PDFs to input folder and run
 cd ..
 mkdir -p input output
 cp your_file.pdf input/
-✅ Step 6: Run the Python script
 python extractor/extract.py
-This will read all PDF files from input/ and generate corresponding .json files in output/.
+```
 
-🐳 Option 2: Run via Docker (Offline Submission Mode)
-✅ Step 1: Add PDFs to input directory
+### 🐳 Run via Docker (Offline / amd64)
+
+```bash
+# Prepare folders
 mkdir -p input output
 cp your_file.pdf input/
-✅ Step 2: Build the Docker image
-docker build --platform linux/amd64 -t pdf-outline-extractor:submission .
-Replace submission with any tag you prefer.
 
-✅ Step 3: Run the container
+# Build image
+docker build --platform linux/amd64 -t pdf-outline-extractor .
+
+# Run container
 docker run --rm \
   -v $(pwd)/input:/app/input \
   -v $(pwd)/output:/app/output \
   --network none \
-  pdf-outline-extractor:submission
-✅ Step 4: Check output
-cat output/your_file.json
-Each PDF will result in a JSON like:
+  pdf-outline-extractor
+```
 
-{
-  "title": "Understanding AI",
-  "outline": [
-    { "level": "H1", "text": "Introduction", "page": 1 },
-    { "level": "H2", "text": "What is AI?", "page": 2 },
-    { "level": "H3", "text": "History of AI", "page": 3 }
-  ]
-}
+---
+
+## 📦 Dependencies
+
+In `extractor/requirements.txt`:
+
+```
+PyMuPDF==1.23.7
+```
+
+> No large libraries or ML models used — keeping total size <200MB.
+
+---
+
+## ✅ Hackathon Constraints Checklist
+
+| Constraint                        | Status       |
+|----------------------------------|--------------|
+| Runtime ≤ 10 seconds             | ✅ Pass       |
+| No Internet / Offline only       | ✅ Pass       |
+| Model Size ≤ 200MB               | ✅ No model   |
+| Platform Compatibility (amd64)  | ✅ Docker OK  |
+| No hardcoded filenames           | ✅ Generic    |
+
+---
+
+## 🎯 Evaluation Alignment
+
+| Criteria                                 | Our Solution                          |
+|------------------------------------------|----------------------------------------|
+| Accurate Heading Extraction (25 points)  | Multi-pattern detection with layout    |
+| Offline Support                          | ✅ Fully offline                        |
+| Performance (≤10s / ≤200MB)              | ✅ Fast, lightweight                    |
+| JSON Output Format                       | ✅ Matches required schema              |
+| Optional Bonus: Multilingual Handling    | ✅ Unicode-safe text extraction         |
+
+---
+
+## 👨‍💻 Built With
+
+- Python 3.10
+- PyMuPDF (fitz)
+- Docker (for isolated amd64 builds)
+
+---
+
+## 📬 Contact
+
+Made with 💡 for **Adobe India Hackathon – Round 1A**
+**GitHub**: https://github.com/your-username
+**Email**: you@example.com
 
